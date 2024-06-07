@@ -1,45 +1,56 @@
-import fs from "fs";
-
-// let htmlData = fs.readFileSync("./../index.html", "utf8");
-let apiData = JSON.parse(fs.readFileSync("/Users/saurabhbansal/Desktop/full stack Web dev /untitled folder/Data.json", "utf-8")).products;
+import Product from "../model/product.js";
 
 let createProduct = (req, res) => {
-    let obj = req.body;
-    apiData.push(obj);
-    res.send(obj);
-  }
+  const product = new Product(req.body);
 
-  let getAllProduct = (req, res) => {
-    res.json(apiData);
-  }
+  product
+    .save()
+    .then((savedProduct) => {
+      res.send(savedProduct);
+    })
+    .catch((error) => {
+      res.status(500).send(error);
+    });
+};
 
-  let getOneProduct =  (req, res) => {
-    let id = +req.params.id;
-    let data = apiData.find((obj) => obj.id === id);
-    res.json(data);
-  }
+let getAllProduct = async (req, res) => {
+  const products = await Product.find();
+  res.json(products);
+};
 
-  let replaceProduct =  (req, res) => {
-    let id = +req.params.id;
-    let dataIndex = apiData.findIndex((obj) => obj.id === id);
-    apiData.splice(dataIndex, 1, req.body);
-    res.json(req.body);
-  }
+let getOneProduct = async (req, res) => {
+  let id = req.params.id;
+  const product = await Product.findById(id);
+  res.json(product);
+};
 
-  let overrideProduct =  (req, res) => {
-    let id = +req.params.id;
-    let dataIndex = apiData.find((obj) => obj.id === id);
-    let product = apiData[dataIndex];
-    apiData.splice(dataIndex, 1, { ...product, ...req.body });
-    res.status(201).send(req.body);
-  }
+let replaceProduct = async (req, res) => {
+  let id = req.params.id;
+  let product = await Product.findOneAndReplace({ _id: id }, req.body, {
+    new: true,
+  });
+  res.json(product);
+};
 
-  let deleteProduct = (req, res) => {
-    let id = +req.params.id;
-    let dataIndex = apiData.find((obj) => obj.id === id);
-    
-    apiData.splice(dataIndex, 1);
-    res.status(201).send({dataIndex : dataIndex});
-  }
+let overrideProduct = async (req, res) => {
+  let id = req.params.id;
+  let product = await Product.findOneAndUpdate({ _id: id }, req.body, {
+    new: true,
+  });
+  res.status(201).send(product);
+};
 
-  export { createProduct , deleteProduct , overrideProduct , replaceProduct , getOneProduct , getAllProduct}
+let deleteProduct = async (req, res) => {
+  let id = req.params.id;
+  let product = await Product.findOneAndDelete(id);
+  res.status(201).send(product);
+};
+
+export {
+  createProduct,
+  deleteProduct,
+  overrideProduct,
+  replaceProduct,
+  getOneProduct,
+  getAllProduct,
+};
